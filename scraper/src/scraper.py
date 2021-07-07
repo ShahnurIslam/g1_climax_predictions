@@ -39,8 +39,25 @@ def clean_html(html):
                     td[3].find('div', {'class' : 'MatchEventLine'}).text,
                     td[3].find('span', {'class' : 'MatchCard'}).text]
             rows.append(row)
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows,columns=['index','date','matchtype','matchevent','matchcard'])
     return df
+def check_win(matchcard:str, person: str) -> bool:
+    return matchcard.split(' ')[0] == person
+
+def clean_dataframe(df):
+    df['time'] = df['matchcard'].str.extract(r'(\d+:\d+)') 
+    df['win'] = df['matchcard'].apply(lambda x: check_win(x,'Kazuchika'))
+    return df
+
+def elo_rating(df):
+    rating = 200 + df['win'].sum() * 10
+    return rating
+
+
 loop = asyncio.get_event_loop()
 r = loop.run_until_complete(main())
-print(clean_html(r))
+clean_df = clean_html(r)
+clean_df =clean_dataframe(clean_df)
+print(elo_rating(clean_df))
+
+
